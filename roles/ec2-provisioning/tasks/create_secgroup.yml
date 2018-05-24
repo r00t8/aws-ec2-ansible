@@ -1,0 +1,45 @@
+# Create web security group and rules
+
+  - name: Create web Security Group
+    ec2_group:
+      name: "{{ web_security_group_name }}"
+      description: web security group
+      region: "{{ aws_region }}"
+      rules:
+        - proto: tcp
+          from_port: 22
+          to_port: 22
+          cidr_ip: 0.0.0.0/0
+        - proto: tcp
+          from_port: 80
+          to_port: 80
+          cidr_ip: 0.0.0.0/0
+        - proto: tcp
+          from_port: 443
+          to_port: 443
+          cidr_ip: 0.0.0.0/0
+      rules_egress:
+        - proto: tcp
+          from_port: 0
+          to_port: 65535
+          cidr_ip: 0.0.0.0/0
+
+  - name: Create Database Security Group
+    ec2_group:
+      name: "{{ database_security_group_name }}"
+      description: Database Security Group
+      region: "{{ aws_region }}"
+      rules:
+        - proto: tcp
+          from_port: 22
+          to_port: 22
+          cidr_ip: 0.0.0.0/0
+        - proto: tcp
+          from_port: 3306
+          to_port: 3306
+          group_name: "{{ web_security_group_name }}" # Allow traffic from instances withing sec group
+      rules_egress:
+        - proto: tcp
+          from_port: 0
+          to_port: 65535
+          cidr_ip: 0.0.0.0/0

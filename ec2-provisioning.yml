@@ -1,0 +1,18 @@
+---
+- hosts: localhost
+  connection: local
+  vars:
+    ssh_key: ebrtraining
+    aws_region: eu-west-1
+    web_num_nodes: 2
+    database_num_nodes: 2
+    web_security_group_name: web
+    database_security_group_name: database
+    web_template: ami-054bc176
+    web_instance_type: t2.micro
+    database_template: ami-054bc176
+    database_instance_type: t2.micro
+
+  roles:
+    - common
+    - ec2-provisioning

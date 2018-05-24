@@ -1,0 +1,53 @@
+  - name: Create web nodes
+    ec2:
+      region: "{{ aws_region }}"
+      image: "{{ web_template }}"
+      instance_type: "{{ web_instance_type }}"
+      key_name: "{{ ssh_key }}"
+      group: "{{ web_security_group_name }}"
+      user_data: "{{ lookup('template', '../templates/web.j2') }}"
+      count: "{{ web_num_nodes }}"
+      wait: yes
+    register: web
+
+  - debug: msg='web IP is {{ item.public_ip }}'
+    with_items: "{{ web.instances }}"
+
+  - debug: msg='web IP is {{ item.private_ip }}'
+    with_items: "{{ web.instances }}"
+
+  - name: Add new instance to host group
+    add_host: hostname={{ item.public_ip }} groupname=web
+    with_items: "{{ web.instances }}"
+
+  - name: Start Database node
+    ec2:
+      region: "{{ aws_region }}"
+      image: "{{ database_template }}"
+      instance_type: "{{ database_instance_type }}"
+      key_name: "{{ ssh_key }}"
+      group: "{{ database_security_group_name }}"
+      user_data: "{{ lookup('template', '../templates/database.j2') }}"
+      wait: yes
+    register: database
+
+  - debug: msg='database IP is {{ item.public_ip }}'
+    with_items: "{{database.instances}}"
+
+  - debug: msg='database IP is {{ item.private_ip }}'
+    with_items: "{{database.instances}}"
+
+  - name: Add new instance to host group
+    add_host: hostname={{ item.public_ip }} groupname=database
+    with_items: "{{database.instances}}"
+
+
+##wait for SSH to come up
+  - name: Wait for SSH to come up
+    local_action: wait_for
+                  host={{ item.public_ip }}
+                  port=22
+                  state=started
+    with_items:
+      - "{{ database.instances }}"
+      - "{{ web.instances }}"
